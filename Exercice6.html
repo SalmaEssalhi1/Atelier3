@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Produits</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background-color: #f4f7f6; 
+            color: #333; 
+            text-align: center;
+        }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 12px; 
+            text-align: left; 
+        }
+        
+        th { 
+            background-color: #4CAF50; 
+            color: white; 
+            cursor: pointer; 
+        }
+        
+        tr:hover { 
+            background-color: #f1f1f1; 
+        }
+        
+        input, select, button { 
+            padding: 10px; 
+            margin: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+            font-size: 16px;
+        }
+        
+        button { 
+            background-color: #4CAF50; 
+            color: white; 
+            border: none; 
+            cursor: pointer;
+        }
+        
+        button:hover { 
+            background-color: #45a049; 
+        }
+        
+        .charts-container {
+    display: flex;
+    justify-content: center; /* Centrer horizontalement */
+    align-items: center;
+    gap: 20px; /* Espacement entre les graphes */
+    margin-top: 20px;
+}
+
+canvas {
+    width: 400px !important;
+    height: 300px !important;
+    background: white;
+    border-radius: 10px;
+    padding: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+
+    </style>
+</head>
+<body>
+    <h1>Gestion des Produits</h1>
+    <input type="file" id="inputfile">
+    <input type="text" id="search" placeholder="Rechercher un produit...">
+    <select id="categoryFilter">
+        <option value="">Toutes les catégories</option>
+    </select>
+    <button onclick="showLowStock()">Faible stock</button>
+    <button onclick="calculateTotalPrice()">Prix total</button>
+    <select id="sortFilter" onchange="sortTable()">
+        <option value="">Trier par</option>
+        <option value="price">Prix</option>
+        <option value="stock">Stock</option>
+    </select>
+    <p id="totalPrice"></p>
+    <table id="productTable">
+        <thead>
+            <tr>
+                <th>Prix</th>
+                <th>Stock</th>
+                <th>Nom</th>
+                <th>Catégorie</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <div class="charts-container">
+    <canvas id="stockChart"></canvas>
+    <canvas id="categoryChart"></canvas>
+</div>
+    
+    <script>
+        let products = [];
+
+        document.getElementById('inputfile').addEventListener('change', function () {
+            let fr = new FileReader();
+            fr.onload = function () {
+                products = JSON.parse(fr.result);
+                displayProducts(products);
+                populateCategories();
+                updateCharts();
+            }
+            fr.readAsText(this.files[0]);
+        });
+
+        function displayProducts(filteredProducts) {
+            let tbody = document.querySelector('#productTable tbody');
+            tbody.innerHTML = '';
+            filteredProducts.forEach(p => {
+                let row = `<tr><td>${p.price} DH</td><td>${p.stock}</td><td>${p.name}</td><td>${p.category}</td></tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function populateCategories() {
+            let categories = [...new Set(products.map(p => p.category))];
+            let filter = document.getElementById('categoryFilter');
+            filter.innerHTML = '<option value="">Toutes les catégories</option>';
+            categories.forEach(cat => {
+                filter.innerHTML += `<option value="${cat}">${cat}</option>`;
+            });
+            filter.addEventListener('change', () => {
+                let selectedCategory = filter.value;
+                let filtered = selectedCategory ? products.filter(p => p.category === selectedCategory) : products;
+                displayProducts(filtered);
+            });
+        }
+
+        function sortTable() {
+            let sortBy = document.getElementById('sortFilter').value;
+            if (sortBy) {
+                products.sort((a, b) => a[sortBy] - b[sortBy]);
+                displayProducts(products);
+            }
+        }
+
+        function showLowStock() {
+            let lowStockProducts = products.filter(p => p.stock < 5);
+            displayProducts(lowStockProducts);
+        }
+
+        function calculateTotalPrice() {
+            let total = products.reduce((sum, p) => sum + p.price * p.stock, 0);
+            document.getElementById('totalPrice').textContent = `Prix total: ${total} DH`;
+        }
+
+        document.getElementById('search').addEventListener('input', function () {
+            let searchValue = this.value.toLowerCase();
+            let filtered = products.filter(p => p.name.toLowerCase().includes(searchValue));
+            displayProducts(filtered);
+        });
+
+        function updateCharts() {
+            let ctx1 = document.getElementById('stockChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: products.map(p => p.name),
+                    datasets: [{ label: 'Stock', data: products.map(p => p.stock), backgroundColor: 'blue' }]
+                }
+            });
+            
+            let ctx2 = document.getElementById('categoryChart').getContext('2d');
+            let categoryCounts = products.reduce((acc, p) => {
+                acc[p.category] = (acc[p.category] || 0) + 1;
+                return acc;
+            }, {});
+            new Chart(ctx2, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(categoryCounts),
+                    datasets: [{ data: Object.values(categoryCounts), backgroundColor: ['red', 'green', 'yellow', 'blue'] }]
+                }
+            });
+        }
+    </script>
+</body>
+</html>

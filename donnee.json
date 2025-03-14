@@ -1,0 +1,12 @@
+[
+    { "name": "Ordinateur portable", "price": 10000, "category": "Électronique", "stock": 10 },
+    { "name": "Smartphone", "price": 2500, "category": "Électronique", "stock": 5 },
+    { "name": "Chaise", "price": 150, "category": "Meubles", "stock": 25 },
+    { "name": "Table", "price": 300, "category": "Meubles", "stock": 15 },
+    { "name": "Réfrigérateur", "price": 5000, "category": "Électroménager", "stock": 25 },
+    { "name": "Micro-ondes", "price": 500, "category": "Électroménager", "stock": 7 },
+    { "name": "Canapé", "price": 400, "category": "Meubles", "stock": 10 },
+    { "name": "Aspirateur", "price": 600, "category": "Électroménager", "stock": 20 },
+    { "name": "Casque audio", "price": 120, "category": "Électronique", "stock": 3 }
+  ]
+  
